@@ -6,7 +6,7 @@ Save a *png and *dat (raw-data) files
 
 @author: Dmitry Stepanov
 aug 2018
-V1.0
+V1.01
 
 """
 
@@ -175,24 +175,19 @@ class MyApp(QMainWindow):
             FSW.write('*rst')
             FSW.write('*cls')
             FSW.write('abort')
-            
             FSW.write('ROSCillator:SOURce E10') #Внешний опорный сигнал 10 МГц 
             #Create new measurement channel for vector signal analysis named "VSA"
             FSW.write("INSTrument:CREate DDEM, 'VSA'")
             FSW.write("INSTrument:SELect 'VSA'") #выбираем канал VSA
             FSW.write("SYST:PRES:CHAN:EXEC") #Делаем пресет канала VSA
-        
             FSW.write('FREQ:CENT {}'.format(cf)) #Set the center frequency.
             FSW.write('DISP:TRAC:Y:RLEV {}'.format(refLevel)) #Set the reference level
-        
             #--------- Configuring the expected input signal ---------------
             FSW.write("SENSe:DDEMod:FORMat APSK")  #Set the modulation type
             FSW.write("SENSe:DDEMod:APSK:NSTate 32") #Set the modulation order
-        
             #FSW.write("SENSe:DDEM:MAPP:CAT?") #Query the available symbol mappings for QPSK modulation
             FSW.write("SENSe:DDEM:MAPP 'DVB_S2_910'") #Set the symbol mapping
             FSW.write("SENSe:DDEM:SRAT {}".format(sumRate))  #Set the symbol rate
-             
             #Select the RRC transmit filter
             FSW.write("SENSe:DDEM:TFIL:NAME 'RRC'")
             FSW.write("SENSe:DDEM:TFIL:ALPH {}".format(alpha))
@@ -218,8 +213,7 @@ class MyApp(QMainWindow):
         except:
             print("not works")
         
-
-        
+       
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MyApp()
