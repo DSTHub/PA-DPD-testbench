@@ -1,23 +1,98 @@
 #9:50 11.09.2018
 
 import visa 
+import instrument
 
-class Fsw():
-    def __init__(self, adr = 'ASRL1::INSTR', backend = '@sim') :
-        self.adr = adr
-        self.backend = backend
-        self.__cf = 0
-        self.__reflvl = 0
-        self.rm = visa.ResourceManager(backend).open_resource(adr, read_termination='\n')
-
-    def write(self, command):
-        self.rm.write(command)
-
-    def query(self, command):
-        self.rm.query(command)
-        return self.rm.query(command)
-    
         
+class Fsw(instrument.Inst):
+    """ Model of R&S FSW spectrum analyzer"""
+    
+    def __init__(self, addr = 'ASRL1::INSTR', backend = '@sim'):
+        """Initialize R&S FSW attributes, try connect via visa
+        
+        
+        :param addr:        str instrument's visa address, like: 'TCPIP0::localhost::inst0::INSTR' or 'ASRL1::INSTR'
+        :param backend:     str backend visa library PATH or name
+        """
+
+        super().__init__(addr, backend)
+ 
+    def preconfig(self) -> str:
+        """
+        config self.rem object with FSW param
+        
+        :return:    str status message
+        """
+
+        if self.check_connection:
+            self.rem.timeout = 25000
+            self.rem.encoding = 'latin_1'
+            self.rem.write_termination = None
+            self.rem.read_termination = '\n'
+
+    def reconnect(self):
+        pass
+
+    def check_connect(self):
+        pass
+        
+    def ssweep(self) -> str:     
+        """
+        Single sweep (measurement) FSW
+        
+        :return:    str status message
+        """
+
+        if self.check_connection:
+            self.write('INIT')                       #сделать однократный запуск
+            return "Done 1-sweep FSW"
+        else:
+            return "Check SFW adress and recconect"
+
+    def save_png(self, work_dir) -> str:
+        """
+        Save a screenshot in *.PNG 
+        
+        :param work_dir: Path on FSW to save *.PNG file
+        :return:    str status message
+        """
+
+        print_dir = "'{}.png'".format(work_dir) #'PATH + Filename' -- must be in ''
+       
+        if self.check_connection:
+            self.write("HCOP:DEST 'MMEM'") #Prints the data to a file.")
+            self.write("HCOP:DEV:LANG PNG") #Selects bmp as the file format.")
+            self.write("MMEM:NAME {}".format(print_dir)) #Selects the file name for the printout.
+            self.write("HCOP:ITEM:ALL") #Prints all screen elements
+            self.write("HCOP:ITEM:WIND:TEXT '0 dBm power off'") #Adds a comment to the printout.
+            self.write("HCOP") #//Stores the printout in a file called 'Screenshot.bmp'.
+            # FSW.write("HCOP:NEXT") #//Stores the printout in a file called 'Screenshot_001.bmp'.
+            return f"spng to {print_dir}" 
+        else:        
+            return ("Check SFW adress and recconect")     
+
+        
+    def save_dat(self, work_dir):
+        """
+        Save a data IQ file *.Dat
+        RAW format with Header notation
+        
+        :param work_dir: Path on FSW to save *.PNG file
+        :return:    str status message
+        """
+
+        print_dir = "'{}.dat'".format(work_dir) #'PATH + Filename' -- must be in ''
+        if self.check_connection:
+            self.write("FORMat:DEXPort:DSEParator POINt")
+            self.write("FORMat:DEXPort:HEADer ON")
+            self.write("FORMat:DEXPort:MODE RAW")
+            self.write("MMEMory:STORe1:TRACe 1, {}".format(print_dir))
+            return (f"sdat to {print_dir}")
+        else: 
+            return ("Check SFW adress and recconect")
+
+    
+    
 
 
  
