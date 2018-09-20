@@ -16,6 +16,7 @@ import os
 
 import visa
 import fsw
+import smw
 
 from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5 import uic
@@ -29,13 +30,17 @@ class MyApp(QMainWindow):
         super(MyApp, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.fsw = fsw.Fsw()
+        
+		self.fsw = fsw.Fsw(addr	= self.ui.ipSA_lineEdit.text(), backend = '@sim')
         self.fsw.preconfig()
         
+		self.smw = smw.Smw(addr	= self.ui.ipGen_lineEdit.text(), backend = '@sim')
+		self.smw.preconfig()
+		
         self.ui_fsw_addr = self.ui.ipSA_lineEdit.text()     #FSW's address from ui
 
-        self.ui.sA_pushButton.clicked.connect(self.GetSp)
-        self.ui.genSetUpsA_pushButton.clicked.connect(self.gensetup)
+        self.ui.sA_pushButton.clicked.connect(self.aninit)
+        self.ui.genSetUpsA_pushButton.clicked.connect(self.geninit)
         self.ui.sdat_pushButton.clicked.connect(self.sdat)
         self.ui.spng_pushButton.clicked.connect(self.spng)
         self.ui.ssweep_pushButton.clicked.connect(self.ssweep)
@@ -70,63 +75,37 @@ class MyApp(QMainWindow):
         self.console_print(self.fsw.ssweep()) #call Fsw.sweep(), return resp into ui.plainTextEdit
    
 
-    def gensetup(self):
-        SMW_addr = self.ui.ipGen_lineEdit.text()
+    def geninit(self):
+        """Initialize R&S SMW200A attributes, try connect via visa
+
+        """
         cf = self.ui.cf_lineEdit.text()
         sumRate = self.ui.sumRate_lineEdit.text()
         reflvl = self.ui.refLevel_lineEdit.text()
         alpha = self.ui.alpha_lineEdit.text()
-        
-        rm = visa.ResourceManager()
-        
-        
-        try:
-            SMW = rm.open_resource(SMW_addr)
-            SMW.timeout = visatimeout
-            SMW.encoding = 'latin_1'
-            SMW.write_termination = None
-            SMW.read_termination = '\n'
-            self.console_print("Connected to " + SMW.query('*idn?'))
+		
+		if not self.check_connection:
+		    SMW_addr = self.ui.ipGen_lineEdit.text()
+            self.smw.addr = SMW_adr
+            self.console_print(self.smw.connect())
+            self.smw.preconfig()
 
-            SMW.write('*cls')
-            SMW.write('abort')
-            
-            """#################CONFIGURE INSTRUMENT#################"""
-                    
-            SMW.write('SOURce1:BB:DM:FORMat APSK32')
-            SMW.write(':SOURce1:BB:DM:SWITching:STATe 1')
-            SMW.write(':SOURce1:BB:DM:APSK32:GAMMa G9D10')
-            SMW.write(':SOURce1:BB:DM:SWITching:STATe 0')
-            SMW.write(':SOURce1:BB:DM:PRBS:LENGth 20')
-            SMW.write(':SOURce1:BB:DM:FILTer:TYPE RCOS')
-            
-            SMW.write(':SOURce1:BB:DM:FILTer:PARameter:RCOSine {}'.format(alpha))
-            
-            SMW.write(':SOURce1:BB:DM:SRATe {}'.format(sumRate))
-            
-            SMW.write(':SOURce1:BB:DM:TRIGger:OUTPut1:ONTime 8')
-            
-            SMW.write(':SOURce1:BB:DM:TRIGger:OUTPut1:OFFTime 1048567')
-            
-            SMW.write(':SOURce1:FREQuency:CW {}'.format(cf))
-            
-            SMW.write(':SOURce1:POWer:POWer {}'.format(reflvl))
-            
-            SMW.write(':SOURce1:BB:DM:STATe 1')
-            
-            SMW.write(':OUTPut1:STATe 1')
-            SMW.write(':SOURce1:INPut:USER3:DIRection OUTP')
-            SMW.write(':OUTPut1:USER3:SIGNal MARKA1')
-            SMW.close()
-        except:
-            self.console_print("No SMW connection!") 
+        if self.check_connection:
+			self.console_print(self.smw.initDPDtestBench(alpha, sumRate, cf, reflvl))
 
-    def GetSp(self):
+
+    def aninit(self):
         """Initialize R&S FSW attributes, try connect via visa
         
         
-self.console_print("Connected to " + FSW.query('*idn?'))
+		self.console_print("Connected to " + FSW.query('*idn?'))
         """
+
+		if not self.fsw.check_connection:
+                FSW_adr = self.ui.ipSA_lineEdit.text()
+                self.fsw.addr = FSW_adr
+                self.console_print(self.fsw.connect())
+                self.fsw.preconfig()
 
         if  self.fsw.check_connection:
             cf = self.ui.cf_lineEdit.text()
@@ -159,15 +138,10 @@ self.console_print("Connected to " + FSW.query('*idn?'))
             self.fsw.write("DDEMod:RLENgth:VALue {} SYM".format(symLen)) #захватываемое колличество символов
             self.fsw.write('DDEMod:TIME {}'.format(symLen)) # колличество символов, отобр на экране
             self.console_print("FSW configured") 
-        except:
+        else:
             self.console_print("No fsw connection!") 
-            
-            if not self.fsw.check_connection:
-                FSW_adr = self.ui.ipSA_lineEdit.text()
-                self.fsw.addr = FSW_adr
-                self.console_print(self.fsw.connect())
-                self.fsw.preconfig()
-        
+
+
     def alltest(self):
         try:
             self.gensetup()

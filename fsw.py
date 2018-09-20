@@ -1,5 +1,15 @@
-#9:50 11.09.2018
+"""
+Fsw class implements SCPI functional 
+creates the local model of FSW
 
+by pyvisa + NIvisa
+For model ussue uses backend = '@sim' by pyvisa-sim
+
+@author: Dmitry Stepanov
+sep 2018
+V2.01  
+
+"""
 import visa 
 import instrument
 
@@ -47,7 +57,7 @@ class Fsw(instrument.Inst):
             self.write('INIT')                       #сделать однократный запуск
             return "Done 1-sweep FSW"
         else:
-            return "Check SFW adress and recconect"
+            return "Check SFW address and reconnect"
 
     def save_png(self, work_dir) -> str:
         """
@@ -69,7 +79,7 @@ class Fsw(instrument.Inst):
             # FSW.write("HCOP:NEXT") #//Stores the printout in a file called 'Screenshot_001.bmp'.
             return f"spng to {print_dir}" 
         else:        
-            return ("Check SFW adress and recconect")     
+            return ("Check SFW address and recconect")     
 
         
     def save_dat(self, work_dir):
@@ -89,25 +99,7 @@ class Fsw(instrument.Inst):
             self.write("MMEMory:STORe1:TRACe 1, {}".format(print_dir))
             return (f"sdat to {print_dir}")
         else: 
-            return ("Check SFW adress and recconect")
-
-    
-    
-
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
+            return ("Check SFW address and reconnect")
 
 
 
