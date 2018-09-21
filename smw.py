@@ -37,15 +37,20 @@ class Smw(instrument.Inst):
     def initDPDtestBench(self, alpha, sumRate, cf, reflvl) -> str:     
         """
         Connect to the SMW and
-		Configure SMW to use with DPD testbench
+        Configure SMW to use with DPD testbench
+        
+        :param alpha: alpha of filter
+        :param sumRate: Path on FSW to save *.PNG file
+        :param cf: Path on FSW to save *.PNG file
+        :param reflvl: Path on FSW to save *.PNG file
         
         :return:    str status message
         """
 
         if self.check_connection:
-			self.write('*cls')
+            self.write('*cls')
             self.write('abort')
-			"""#################CONFIGURE INSTRUMENT#################"""   
+            """#################CONFIGURE INSTRUMENT#################"""   
             self.write('SOURce1:BB:DM:FORMat APSK32')
             self.write(':SOURce1:BB:DM:SWITching:STATe 1')
             self.write(':SOURce1:BB:DM:APSK32:GAMMa G9D10')

@@ -101,5 +101,49 @@ class Fsw(instrument.Inst):
         else: 
             return ("Check SFW address and reconnect")
 
+    def initDPDtestBench(self, cf, reflvl, sumRate, alpha, symLen) -> str:     
+        """
+        Connect to the Fsw and
+        Configure Fsw to use with DPD testbench
+        
+        :return:    str status message
+        """
+
+        if  self.check_connection:
+            cf = self.ui.cf_lineEdit.text()
+            sumRate = self.ui.sumRate_lineEdit.text()
+            refLevel = self.ui.refLevel_lineEdit.text()
+            alpha = self.ui.alpha_lineEdit.text()
+            symLen = self.ui.symLen_lineEdit.text()
+            self.write('*rst')
+            self.write('*cls')
+            self.write('abort')
+            self.write('ROSCillator:SOURce E10') #Внешний опорный сигнал 10 МГц 
+            #Create new measurement channel for vector signal analysis named "VSA"
+            self.write("INSTrument:CREate DDEM, 'VSA'")
+            self.write("INSTrument:SELect 'VSA'") #выбираем канал VSA
+            self.write("SYST:PRES:CHAN:EXEC") #Делаем пресет канала VSA
+            self.write('FREQ:CENT {}'.format(cf)) #Set the center frequency.
+            self.write('DISP:TRAC:Y:RLEV {}'.format(refLevel)) #Set the reference level
+            #--------- Configuring the expected input signal ---------------
+            self.write("SENSe:DDEMod:FORMat APSK")  #Set the modulation type
+            self.write("SENSe:DDEMod:APSK:NSTate 32") #Set the modulation order
+            #FSW.write("SENSe:DDEM:MAPP:CAT?") #Query the available symbol mappings for QPSK modulation
+            self.write("SENSe:DDEM:MAPP 'DVB_S2_910'") #Set the symbol mapping
+            self.write("SENSe:DDEM:SRAT {}".format(sumRate))  #Set the symbol rate
+            #Select the RRC transmit filter
+            self.write("SENSe:DDEM:TFIL:NAME 'RRC'")
+            self.write("SENSe:DDEM:TFIL:ALPH {}".format(alpha))
+            self.write("TRIGger:SEQuence:SOURce EXTernal") #Переключаем тригер на EXT1
+            self.write("INIT:CONT OFF") #switch to single sweep mode
+          #//Initiate a basic frequency sweep and wait until the sweep has finished.
+            self.write("DDEMod:RLENgth:VALue {} SYM".format(symLen)) #захватываемое колличество символов
+            self.write('DDEMod:TIME {}'.format(symLen)) # колличество символов, отобр на экране
+            return ("FSW configured") 
+        else:
+            return("No FSW connection!") 
+
+        
+
 
 

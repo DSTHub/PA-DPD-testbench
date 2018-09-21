@@ -31,11 +31,11 @@ class MyApp(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         
-		self.fsw = fsw.Fsw(addr	= self.ui.ipSA_lineEdit.text(), backend = '@sim')
+        self.fsw = fsw.Fsw(addr	= self.ui.ipSA_lineEdit.text(), backend = '@sim')
         self.fsw.preconfig()
         
-		self.smw = smw.Smw(addr	= self.ui.ipGen_lineEdit.text(), backend = '@sim')
-		self.smw.preconfig()
+        self.smw = smw.Smw(addr	= self.ui.ipGen_lineEdit.text(), backend = '@sim')
+        self.smw.preconfig()
 		
         self.ui_fsw_addr = self.ui.ipSA_lineEdit.text()     #FSW's address from ui
 
@@ -84,14 +84,14 @@ class MyApp(QMainWindow):
         reflvl = self.ui.refLevel_lineEdit.text()
         alpha = self.ui.alpha_lineEdit.text()
 		
-		if not self.check_connection:
-		    SMW_addr = self.ui.ipGen_lineEdit.text()
-            self.smw.addr = SMW_adr
+        if not self.smw.check_connection:
+            SMW_addr = self.ui.ipGen_lineEdit.text()
+            self.smw.addr = SMW_addr
             self.console_print(self.smw.connect())
             self.smw.preconfig()
 
-        if self.check_connection:
-			self.console_print(self.smw.initDPDtestBench(alpha, sumRate, cf, reflvl))
+        if self.smw.check_connection:
+            self.console_print(self.smw.initDPDtestBench(alpha, sumRate, cf, reflvl))
 
 
     def aninit(self):
@@ -101,45 +101,7 @@ class MyApp(QMainWindow):
 		self.console_print("Connected to " + FSW.query('*idn?'))
         """
 
-		if not self.fsw.check_connection:
-                FSW_adr = self.ui.ipSA_lineEdit.text()
-                self.fsw.addr = FSW_adr
-                self.console_print(self.fsw.connect())
-                self.fsw.preconfig()
-
-        if  self.fsw.check_connection:
-            cf = self.ui.cf_lineEdit.text()
-            sumRate = self.ui.sumRate_lineEdit.text()
-            refLevel = self.ui.refLevel_lineEdit.text()
-            alpha = self.ui.alpha_lineEdit.text()
-            symLen = self.ui.symLen_lineEdit.text()
-            self.fsw.write('*rst')
-            self.fsw.write('*cls')
-            self.fsw.write('abort')
-            self.fsw.write('ROSCillator:SOURce E10') #Внешний опорный сигнал 10 МГц 
-            #Create new measurement channel for vector signal analysis named "VSA"
-            self.fsw.write("INSTrument:CREate DDEM, 'VSA'")
-            self.fsw.write("INSTrument:SELect 'VSA'") #выбираем канал VSA
-            self.fsw.write("SYST:PRES:CHAN:EXEC") #Делаем пресет канала VSA
-            self.fsw.write('FREQ:CENT {}'.format(cf)) #Set the center frequency.
-            self.fsw.write('DISP:TRAC:Y:RLEV {}'.format(refLevel)) #Set the reference level
-            #--------- Configuring the expected input signal ---------------
-            self.fsw.write("SENSe:DDEMod:FORMat APSK")  #Set the modulation type
-            self.fsw.write("SENSe:DDEMod:APSK:NSTate 32") #Set the modulation order
-            #FSW.write("SENSe:DDEM:MAPP:CAT?") #Query the available symbol mappings for QPSK modulation
-            self.fsw.write("SENSe:DDEM:MAPP 'DVB_S2_910'") #Set the symbol mapping
-            self.fsw.write("SENSe:DDEM:SRAT {}".format(sumRate))  #Set the symbol rate
-            #Select the RRC transmit filter
-            self.fsw.write("SENSe:DDEM:TFIL:NAME 'RRC'")
-            self.fsw.write("SENSe:DDEM:TFIL:ALPH {}".format(alpha))
-            self.fsw.write("TRIGger:SEQuence:SOURce EXTernal") #Переключаем тригер на EXT1
-            self.fsw.write("INIT:CONT OFF") #switch to single sweep mode
-          #//Initiate a basic frequency sweep and wait until the sweep has finished.
-            self.fsw.write("DDEMod:RLENgth:VALue {} SYM".format(symLen)) #захватываемое колличество символов
-            self.fsw.write('DDEMod:TIME {}'.format(symLen)) # колличество символов, отобр на экране
-            self.console_print("FSW configured") 
-        else:
-            self.console_print("No fsw connection!") 
+        
 
 
     def alltest(self):
