@@ -12,9 +12,6 @@ V2.01
 
 import sys
 import time
-import os
-
-import visa
 import fsw
 import smw
 
@@ -63,13 +60,13 @@ class MyApp(QMainWindow):
         save_dir = f"{pref}cf-{(cf)}_srate-{sumRate}_pwr{reflvl}_symlen-{symLen}-{time_stamp}"  # Без расширения файла, только имя
         return (save_dir)
         
-    def sdat(self): # Сохранить WAR файл IQ в рабочую папку 
+    def sdat(self): # Сохранить RAW файл IQ в рабочую папку 
         save_dir = self.savedirgen()
-        self.console_print(self.fsw.save_dat(save_dir)) #call Fsw.save_dat(), return resp into ui.plainTextEdit
+        self.console_print(self.fsw.saveData(save_dir)) #call Fsw.saveData(), return resp into ui.plainTextEdit
         
     def spng(self): # Save a screenshot into workdir
         print_dir = self.savedirgen()
-        self.console_print(self.fsw.save_png(print_dir)) #call Fsw.save_png(), return resp into ui.plainTextEdit
+        self.console_print(self.fsw.savePng(print_dir)) #call Fsw.savePng(), return resp into ui.plainTextEdit
                       
     def ssweep(self):
         self.console_print(self.fsw.ssweep()) #call Fsw.sweep(), return resp into ui.plainTextEdit
@@ -101,18 +98,31 @@ class MyApp(QMainWindow):
 		self.console_print("Connected to " + FSW.query('*idn?'))
         """
 
-        
+        cf = self.ui.cf_lineEdit.text()
+        reflvl = self.ui.refLevel_lineEdit.text()
+        sumRate = self.ui.sumRate_lineEdit.text()
+        alpha = self.ui.alpha_lineEdit.text()
+        symLen = self.ui.symLen_lineEdit.text()
+
+        if not self.fsw.check_connection:
+            fsw_addr = self.ui.ipSA_lineEdit.text()     #FSW addr from UI 
+            self.fsw.addr = fsw_addr
+            self.console_print(self.fsw.connect())
+            self.fsw.preconfig()
+
+        if self.fsw.check_connection:
+            self.console_print(self.fsw.initDPDtestBench(cf, reflvl, sumRate, alpha, symLen))
 
 
     def alltest(self):
-        try:
-            self.gensetup()
-            self.GetSp()
-            self.ssweep()
-            self.spng()
-            self.sdat()
-        except:
-            print("not works")
+#        try:
+        self.geninit()
+        self.aninit()
+        self.fsw.ssweep()
+        self.fsw.saveData(self.savedirgen())
+        self.fsw.savePng(self.savedirgen())
+#        except:
+#            print("not works")
             
 
        

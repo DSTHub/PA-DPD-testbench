@@ -59,7 +59,7 @@ class Fsw(instrument.Inst):
         else:
             return "Check SFW address and reconnect"
 
-    def save_png(self, work_dir) -> str:
+    def savePng(self, work_dir) -> str:
         """
         Save a screenshot in *.PNG 
         
@@ -82,7 +82,7 @@ class Fsw(instrument.Inst):
             return ("Check SFW address and recconect")     
 
         
-    def save_dat(self, work_dir):
+    def saveData(self, work_dir):
         """
         Save a data IQ file *.Dat
         RAW format with Header notation
@@ -107,14 +107,9 @@ class Fsw(instrument.Inst):
         Configure Fsw to use with DPD testbench
         
         :return:    str status message
-        """
+        """ 
 
         if  self.check_connection:
-            cf = self.ui.cf_lineEdit.text()
-            sumRate = self.ui.sumRate_lineEdit.text()
-            refLevel = self.ui.refLevel_lineEdit.text()
-            alpha = self.ui.alpha_lineEdit.text()
-            symLen = self.ui.symLen_lineEdit.text()
             self.write('*rst')
             self.write('*cls')
             self.write('abort')
@@ -124,7 +119,7 @@ class Fsw(instrument.Inst):
             self.write("INSTrument:SELect 'VSA'") #выбираем канал VSA
             self.write("SYST:PRES:CHAN:EXEC") #Делаем пресет канала VSA
             self.write('FREQ:CENT {}'.format(cf)) #Set the center frequency.
-            self.write('DISP:TRAC:Y:RLEV {}'.format(refLevel)) #Set the reference level
+            self.write('DISP:TRAC:Y:RLEV {}'.format(reflvl)) #Set the reference level
             #--------- Configuring the expected input signal ---------------
             self.write("SENSe:DDEMod:FORMat APSK")  #Set the modulation type
             self.write("SENSe:DDEMod:APSK:NSTate 32") #Set the modulation order
@@ -143,7 +138,6 @@ class Fsw(instrument.Inst):
         else:
             return("No FSW connection!") 
 
-        
 
 
 
