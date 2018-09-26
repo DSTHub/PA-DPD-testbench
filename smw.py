@@ -69,5 +69,5 @@ class Smw(instrument.Inst):
             self.write(':OUTPut1:USER3:SIGNal MARKA1')
             return "SMW200A configured"
         else:
-            return "Check SMW200A address and reconnect"
+            return "No SMW200A connection!"
 

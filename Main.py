@@ -28,20 +28,22 @@ class MyApp(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         
-        self.fsw = fsw.Fsw(addr	= self.ui.ipSA_lineEdit.text(), backend = '@sim')
+        self.fsw = fsw.Fsw(addr	= self.ui.ipSA_lineEdit.text(), backend = self.ui.backendComboBox.currentText())
         self.fsw.preconfig()
         
-        self.smw = smw.Smw(addr	= self.ui.ipGen_lineEdit.text(), backend = '@sim')
+        self.smw = smw.Smw(addr	= self.ui.ipGen_lineEdit.text(), backend = self.ui.backendComboBox.currentText())
         self.smw.preconfig()
-		
+
         self.ui_fsw_addr = self.ui.ipSA_lineEdit.text()     #FSW's address from ui
 
-        self.ui.sA_pushButton.clicked.connect(self.aninit)
-        self.ui.genSetUpsA_pushButton.clicked.connect(self.geninit)
+        self.ui.initSa_pushButton.clicked.connect(self.aninit)
+        self.ui.initGen_pushButton.clicked.connect(self.geninit)
         self.ui.sdat_pushButton.clicked.connect(self.sdat)
         self.ui.spng_pushButton.clicked.connect(self.spng)
         self.ui.ssweep_pushButton.clicked.connect(self.ssweep)
         self.ui.alltest_pushButton.clicked.connect(self.alltest)
+        self.ui.wrParAn_pushButton.clicked.connect(self.wrParAn)
+        self.ui.wrParGen_pushButton.clicked.connect(self.wrParGen)
 #        self.ui.alpha_lineEdit.editingFinished.connect(self.ssweep)
 #        self.ui.modType_comboBox.activated.connect(self.spng)
         
@@ -78,17 +80,17 @@ class MyApp(QMainWindow):
         """
         cf = self.ui.cf_lineEdit.text()
         sumRate = self.ui.sumRate_lineEdit.text()
-        reflvl = self.ui.refLevel_lineEdit.text()
+        power = self.ui.powerLevel_lineEdit.text()
         alpha = self.ui.alpha_lineEdit.text()
-		
-        if not self.smw.check_connection:
-            SMW_addr = self.ui.ipGen_lineEdit.text()
-            self.smw.addr = SMW_addr
-            self.console_print(self.smw.connect())
-            self.smw.preconfig()
-
+        SMW_addr = self.ui.ipGen_lineEdit.text()
+        self.smw.addr = SMW_addr
+        self.smw.backend = self.ui.backendComboBox.currentText()
+        self.console_print(self.smw.connect())
+        self.smw.preconfig()
         if self.smw.check_connection:
-            self.console_print(self.smw.initDPDtestBench(alpha, sumRate, cf, reflvl))
+            self.console_print(self.smw.initDPDtestBench(alpha, sumRate, cf, power))
+        else:
+            self.console_print('Check SMW200A settings!')
 
 
     def aninit(self):
@@ -103,15 +105,31 @@ class MyApp(QMainWindow):
         sumRate = self.ui.sumRate_lineEdit.text()
         alpha = self.ui.alpha_lineEdit.text()
         symLen = self.ui.symLen_lineEdit.text()
-
-        if not self.fsw.check_connection:
-            fsw_addr = self.ui.ipSA_lineEdit.text()     #FSW addr from UI 
-            self.fsw.addr = fsw_addr
-            self.console_print(self.fsw.connect())
-            self.fsw.preconfig()
+        fsw_addr = self.ui.ipSA_lineEdit.text()     #FSW addr from UI 
+        self.fsw.addr = fsw_addr
+        self.fsw.backend = self.ui.backendComboBox.currentText()
+        self.console_print(self.fsw.connect())
+        self.fsw.preconfig()
 
         if self.fsw.check_connection:
             self.console_print(self.fsw.initDPDtestBench(cf, reflvl, sumRate, alpha, symLen))
+        else:
+            self.console_print('Check FSW settings!')
+    
+    def wrParAn(self):
+        cf = self.ui.cf_lineEdit.text()
+        reflvl = self.ui.refLevel_lineEdit.text()
+        sumRate = self.ui.sumRate_lineEdit.text()
+        alpha = self.ui.alpha_lineEdit.text()
+        symLen = self.ui.symLen_lineEdit.text()        
+        self.console_print(self.fsw.initDPDtestBench(cf, reflvl, sumRate, alpha, symLen))
+    
+    def wrParGen(self):
+        cf = self.ui.cf_lineEdit.text()
+        sumRate = self.ui.sumRate_lineEdit.text()
+        power = self.ui.powerLevel_lineEdit.text()
+        alpha = self.ui.alpha_lineEdit.text()
+        self.console_print(self.smw.initDPDtestBench(alpha, sumRate, cf, power))
 
 
     def alltest(self):
@@ -130,5 +148,6 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MyApp()
     window.show()
-#    sys.exit(app.exec_()) #does't work in spyder
     exit(app.exec_())
+#    sys.exit(app.exec_()) #does't work in spyder
+    
