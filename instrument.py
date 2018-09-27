@@ -31,7 +31,7 @@ class Inst():
         """
 
         try:
-            self.rem = visa.ResourceManager(self.__backend).open_resource(self.__addr) #object res by visa
+            self.rem = visa.ResourceManager(self.__backend).open_resource(resource_name = self.__addr) #object res by visa
 
         except AttributeError:
             self.__check_connection = False
@@ -57,17 +57,27 @@ class Inst():
         
         """
 
-    def write(self, command:str):   #define write SCPI meth
+    def write(self, command:str) -> str:   #define write SCPI meth
         if self.__check_connection:
             self.rem.write(command)
+            return "Wr"
+        else:
+            return "didn't Wr, check connection"
 
-    def query(self, command:str):   #define query SCPI meth 
+    def query(self, command:str) -> str:   #define query SCPI meth 
         if self.__check_connection:
             return self.rem.query(command)
+        else:
+            return "didn't Query, check connection"
 
-    def read(self):   #define query SCPI meth 
+    def read(self) -> str:   #define query SCPI meth 
         if self.__check_connection:
-            return self.rem.read()
+            try:
+                return self.rem.read()
+            except visa.VisaIOError:
+                return "Can't read VisaIOError"
+        else:
+            return "didn't Read, check connection"
 
     def get_addr(self):
         return self.__addr

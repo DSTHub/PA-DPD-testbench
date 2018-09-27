@@ -14,6 +14,7 @@ import sys
 import time
 import fsw
 import smw
+import comsender
 
 from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5 import uic
@@ -28,12 +29,15 @@ class MyApp(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         
-        self.fsw = fsw.Fsw(addr	= self.ui.ipSA_lineEdit.text(), backend = self.ui.backendComboBox.currentText())
+        self.fsw = fsw.Fsw(addr = self.ui.ipSA_lineEdit.text(), backend = self.ui.backendComboBox.currentText())
         self.fsw.preconfig()
         
-        self.smw = smw.Smw(addr	= self.ui.ipGen_lineEdit.text(), backend = self.ui.backendComboBox.currentText())
+        self.smw = smw.Smw(addr = self.ui.ipGen_lineEdit.text(), backend = self.ui.backendComboBox.currentText())
         self.smw.preconfig()
-
+        
+        self.comsender = comsender.Comsender()
+        self.comsender.preconfig()
+        
         self.ui_fsw_addr = self.ui.ipSA_lineEdit.text()     #FSW's address from ui
 
         self.ui.initSa_pushButton.clicked.connect(self.aninit)
@@ -44,6 +48,13 @@ class MyApp(QMainWindow):
         self.ui.alltest_pushButton.clicked.connect(self.alltest)
         self.ui.wrParAn_pushButton.clicked.connect(self.wrParAn)
         self.ui.wrParGen_pushButton.clicked.connect(self.wrParGen)
+        
+        
+        self.ui.initInst_pushButton.clicked.connect(self.comsenderInit)
+        self.ui.comWr_pushButton.clicked.connect(self.comsenderWr)
+        self.ui.comRead_pushButton.clicked.connect(self.comsenderRead)
+        self.ui.ComQ_pushButton.clicked.connect(self.comsenderQ)
+        
 #        self.ui.alpha_lineEdit.editingFinished.connect(self.ssweep)
 #        self.ui.modType_comboBox.activated.connect(self.spng)
         
@@ -134,14 +145,29 @@ class MyApp(QMainWindow):
 
     def alltest(self):
 #        try:
-        self.geninit()
-        self.aninit()
+        self.wrParGen()
+        self.wrParAn()
         self.fsw.ssweep()
         self.fsw.saveData(self.savedirgen())
         self.fsw.savePng(self.savedirgen())
 #        except:
 #            print("not works")
-            
+
+    def comsenderInit(self):
+        self.console_print("Comsender's Instrument init...")
+        self.comsender.addr = self.ui.ipInst_lineEdit.text()
+        self.comsender.backend = "@ni"
+        self.console_print(self.comsender.connect())
+        self.fsw.preconfig()
+
+    def comsenderWr(self):
+        self.console_print(self.comsender.write(self.ui.command_lineEdit.text()))
+
+    def comsenderRead(self):
+        self.console_print(self.comsender.read())
+
+    def comsenderQ(self):
+        self.console_print(self.comsender.query(self.ui.command_lineEdit.text()))
 
        
 if __name__ == "__main__":

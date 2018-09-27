@@ -3,14 +3,13 @@ Fsw class implements SCPI functional
 creates the local model of FSW
 
 by pyvisa + NIvisa
-For model ussue uses backend = '@sim' by pyvisa-sim
+For model issue uses backend = '@sim' by pyvisa-sim
 
 @author: Dmitry Stepanov
 sep 2018
 V2.01  
 
 """
-import visa 
 import instrument
 
         
