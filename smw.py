@@ -10,21 +10,21 @@ import instrument
 
 class Smw(instrument.Inst):
     """ Model of R&S SMW generator"""
-    
-    def __init__(self, addr = 'ASRL1::INSTR', backend = '@sim'):
+
+    def __init__(self, addr='ASRL1::INSTR', backend='@sim'):
         """Initialize R&S SMW attributes, try connect via visa
-        
-        
+
+
         :param addr:        str instrument's visa address, like: 'TCPIP0::localhost::inst0::INSTR' or 'ASRL1::INSTR'
         :param backend:     str backend visa library PATH or name
         """
 
         super().__init__(addr, backend)
- 
+
     def preconfig(self) -> str:
         """
         config self.rem object with SMW param
-        
+
         :return:    str status message
         """
 
@@ -33,31 +33,32 @@ class Smw(instrument.Inst):
             self.rem.encoding = 'latin_1'
             self.rem.write_termination = None
             self.rem.read_termination = '\n'
-			
-    def initDPDtestBench(self, alpha, sumRate, cf, reflvl) -> str:     
+
+    def initDPDtestBench(self, alpha, sumRate, cf, reflvl) -> str:
         """
         Connect to the SMW and
         Configure SMW to use with DPD testbench
-        
+
         :param alpha: alpha of filter
         :param sumRate: Path on FSW to save *.PNG file
         :param cf: Path on FSW to save *.PNG file
         :param reflvl: Path on FSW to save *.PNG file
-        
+
         :return:    str status message
         """
 
         if self.check_connection:
             self.write('*cls')
             self.write('abort')
-            """#################CONFIGURE INSTRUMENT#################"""   
+            """#################CONFIGURE INSTRUMENT#################"""
             self.write('SOURce1:BB:DM:FORMat APSK32')
             self.write(':SOURce1:BB:DM:SWITching:STATe 1')
             self.write(':SOURce1:BB:DM:APSK32:GAMMa G9D10')
             self.write(':SOURce1:BB:DM:SWITching:STATe 0')
             self.write(':SOURce1:BB:DM:PRBS:LENGth 20')
             self.write(':SOURce1:BB:DM:FILTer:TYPE RCOS')
-            self.write(':SOURce1:BB:DM:FILTer:PARameter:RCOSine {}'.format(alpha))
+            self.write(
+                ':SOURce1:BB:DM:FILTer:PARameter:RCOSine {}'.format(alpha))
             self.write(':SOURce1:BB:DM:SRATe {}'.format(sumRate))
             self.write(':SOURce1:BB:DM:TRIGger:OUTPut1:ONTime 8')
             self.write(':SOURce1:BB:DM:TRIGger:OUTPut1:OFFTime 1048567')
@@ -70,4 +71,3 @@ class Smw(instrument.Inst):
             return "SMW200A configured"
         else:
             return "No SMW200A connection!"
-

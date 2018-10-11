@@ -7,24 +7,24 @@ Created on Thu Sep 27 08:53:21 2018
 
 import instrument
 
-        
+
 class Comsender(instrument.Inst):
     """ Model of R&S FSW spectrum analyzer"""
-    
-    def __init__(self, addr = 'ASRL1::INSTR', backend = '@sim'):
+
+    def __init__(self, addr='ASRL1::INSTR', backend='@sim'):
         """Initialize R&S FSW attributes, try connect via visa
-        
-        
+
+
         :param addr:        str instrument's visa address, like: 'TCPIP0::localhost::inst0::INSTR' or 'ASRL1::INSTR'
         :param backend:     str backend visa library PATH or name
         """
 
         super().__init__(addr, backend)
- 
+
     def preconfig(self) -> str:
         """
         config self.rem object with FSW param
-        
+
         :return:    str status message
         """
 
