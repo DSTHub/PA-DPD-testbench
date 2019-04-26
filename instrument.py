@@ -41,7 +41,7 @@ class Inst():
 
         except BaseException:
             self.__check_connection = False
-            return 'Connection error, somethink false'
+            return 'Connection error, something false'
 
         else:
             self.__check_connection = True

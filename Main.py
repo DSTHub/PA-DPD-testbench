@@ -6,7 +6,7 @@ Save a *png and *dat (raw-data) files
 
 @author: Dmitry Stepanov
 sep 2018
-V2.01
+V2.02
 
 """
 
@@ -15,7 +15,6 @@ import time
 import fsw
 import smw
 import comsender
-
 from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5 import uic
 
@@ -62,12 +61,18 @@ class MyApp(QMainWindow):
 #        self.ui.alpha_lineEdit.editingFinished.connect(self.ssweep)
 #        self.ui.modType_comboBox.activated.connect(self.spng)
 
-    def console_print(self, text):  # Apend 'text' into ui.plainTextEdit (ui console)
+    def console_print(self, text):   
+        """
+        Apend 'text' into ui.plainTextEdit (ui console)
+        
+        :param text:    text to apend into ui.plainTextEdit (ui console), str
+        :return:        None
+        """
         self.ui.plainTextEdit.appendPlainText(text)
 
     # File's name format cf-1e9_srate-10e6_pw10_symLen-32768 + PATH workdir
     # from ui
-    def savedirgen(self):
+    def __savedirgen(self):
         cf = self.ui.cf_lineEdit.text()
         sumRate = self.ui.sumRate_lineEdit.text()
         powerLevel = self.ui.powerLevel_lineEdit.text()
@@ -78,13 +83,16 @@ class MyApp(QMainWindow):
         save_dir = f"{pref}cf-{(cf)}_srate-{sumRate}_pwr-{powerLevel}_len-{symLen}-{time_stamp}"
         return (save_dir)
 
-    def sdat(self):  # Сохранить RAW файл IQ в рабочую папку
-        save_dir = self.savedirgen()
+    def sdat(self):  
+        """
+        Save RAW-file IQ into work dir
+        """
+        save_dir = self.__savedirgen()
         # call Fsw.saveData(), return resp into ui.plainTextEdit
         self.console_print(self.fsw.saveData(save_dir))
 
     def spng(self):  # Save a screenshot into workdir
-        print_dir = self.savedirgen()
+        print_dir = self.__savedirgen()
         # call Fsw.savePng(), return resp into ui.plainTextEdit
         self.console_print(self.fsw.savePng(print_dir))
 
@@ -93,7 +101,8 @@ class MyApp(QMainWindow):
         self.console_print(self.fsw.ssweep())
 
     def geninit(self):
-        """Initialize R&S SMW200A attributes, try connect via visa
+        """
+        Initialize R&S SMW200A attributes, try connect via visa
 
         """
         cf = self.ui.cf_lineEdit.text()
@@ -114,11 +123,8 @@ class MyApp(QMainWindow):
 
     def aninit(self):
         """Initialize R&S FSW attributes, try connect via visa
-
-
                 self.console_print("Connected to " + FSW.query('*idn?'))
         """
-
         cf = self.ui.cf_lineEdit.text()
         reflvl = self.ui.refLevel_lineEdit.text()
         sumRate = self.ui.sumRate_lineEdit.text()
@@ -138,6 +144,9 @@ class MyApp(QMainWindow):
             self.console_print('Check FSW settings!')
 
     def wrParAn(self):
+        """
+        Write parameters from UI to analyzer  
+        """
         cf = self.ui.cf_lineEdit.text()
         reflvl = self.ui.refLevel_lineEdit.text()
         sumRate = self.ui.sumRate_lineEdit.text()
@@ -148,6 +157,9 @@ class MyApp(QMainWindow):
                 cf, reflvl, sumRate, alpha, symLen))
 
     def wrParGen(self):
+        """
+        Write parameters from UI to signal generator  
+        """
         cf = self.ui.cf_lineEdit.text()
         sumRate = self.ui.sumRate_lineEdit.text()
         power = self.ui.powerLevel_lineEdit.text()
@@ -161,12 +173,15 @@ class MyApp(QMainWindow):
         self.wrParGen()
         self.wrParAn()
         self.fsw.ssweep()
-        self.fsw.saveData(self.savedirgen())
-        self.fsw.savePng(self.savedirgen())
+        self.fsw.saveData(self.__savedirgen())
+        self.fsw.savePng(self.__savedirgen())
 #        except:
 #            print("not works")
 
     def comsenderInit(self):
+        """
+        Init comsender
+        """
         self.console_print("Comsender's Instrument init...")
         self.comsender.addr = self.ui.ipInst_lineEdit.text()
         self.comsender.backend = "@ni"
@@ -174,22 +189,35 @@ class MyApp(QMainWindow):
         self.fsw.preconfig()
 
     def comsenderWr(self):
+        """
+        Write command from UI to visa instrument  
+        """
         self.console_print(
             self.comsender.write(
                 self.ui.command_lineEdit.text()))
 
     def comsenderRead(self):
+        """
+        Read data from visa instrument  
+        """
         self.console_print(self.comsender.read())
 
     def comsenderQ(self):
+        """
+        Write command from UI to visa instrument then 
+        Read data from visa instrument
+        """
         self.console_print(
             self.comsender.query(
                 self.ui.command_lineEdit.text()))
 
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
+    if not QApplication.instance():
+        app = QApplication(sys.argv)
+    else:
+        app = QApplication.instance() 
     window = MyApp()
     window.show()
-    exit(app.exec_())
-#    sys.exit(app.exec_()) #does't work in spyder
+    app.exec_()
+
