@@ -1,12 +1,12 @@
 """
 Power amplifiers testbench for DPD
 Just generate, synchronize and demod APKS32 signal
-Control a FSW16 and a SMW200A by pyvisa + NIvisa
-Save a *png and *dat (raw-data) files
+Control a R&S FSW and a R&S SMW200A with pyvisa + NIvisa
+Save a *png and *dat (raw-data) files in workdir
 
 @author: Dmitry Stepanov
 aug 2018
-V1.01
+V1.02
 
 """
 
@@ -28,7 +28,7 @@ class MyApp(QMainWindow):
         super(MyApp, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.ui.sA_pushButton.clicked.connect(self.GetSp)
+        self.ui.sA_pushButton.clicked.connect(self.get_spectrum)
         self.ui.genSetUpsA_pushButton.clicked.connect(self.gensetup)
         self.ui.sdat_pushButton.clicked.connect(self.sdat)
         self.ui.spng_pushButton.clicked.connect(self.spng)
@@ -55,7 +55,7 @@ class MyApp(QMainWindow):
     def sdat(self):
         """Save RAW-file with IQ-data into workdir"""
         save_dir = "'{}.dat'".format(self.savedirgen())
-        fsw_addr = self.ui.ipSA_lineEdit.text()     #Адрес анализатора в окне ui
+        fsw_addr = self.ui.ipSA_lineEdit.text()     #Analizer's adress from ui
         rm = visa.ResourceManager()
         try:
             fsw = rm.open_resource(fsw_addr)
@@ -76,7 +76,7 @@ class MyApp(QMainWindow):
         """Save screenshot into workdir"""
 
         print_dir = "'{}.png'".format(self.savedirgen())
-        fsw_addr = self.ui.ipSA_lineEdit.text()     #Адрес анализатора в окне ui
+        fsw_addr = self.ui.ipSA_lineEdit.text()     #Analizer's adress from ui
         rm = visa.ResourceManager()
         try:
             fsw = rm.open_resource(fsw_addr)
@@ -99,7 +99,7 @@ class MyApp(QMainWindow):
     def ssweep(self):
         """Make single sweep of analizer, update analizer's data"""
 
-        fsw_addr = self.ui.ipSA_lineEdit.text() #address in ui
+        fsw_addr = self.ui.ipSA_lineEdit.text() #address from ui
         rm = visa.ResourceManager()
         try:
             fsw = rm.open_resource(fsw_addr)
@@ -151,7 +151,7 @@ class MyApp(QMainWindow):
         except:
             self.console_print("No SMW connection!")
 
-    def GetSp(self):
+    def get_spectrum(self):
         """Setup analizer with params from UI"""
 
         print("GetSp!")
@@ -172,11 +172,11 @@ class MyApp(QMainWindow):
             fsw.write('*rst')
             fsw.write('*cls')
             fsw.write('abort')
-            fsw.write('ROSCillator:SOURce E10') #Внешний опорный сигнал 10 МГц
+            fsw.write('ROSCillator:SOURce E10') #Reference 10 МГц
             #Create new measurement channel for vector signal analysis named "VSA"
             fsw.write("INSTrument:CREate DDEM, 'VSA'")
             fsw.write("INSTrument:SELect 'VSA'") #choose channel VSA
-            fsw.write("SYST:PRES:CHAN:EXEC") #Делаем пресет канала VSA
+            fsw.write("SYST:PRES:CHAN:EXEC") #preset channel
             fsw.write('FREQ:CENT {}'.format(center_frequency)) #Set the center frequency.
             fsw.write('DISP:TRAC:Y:RLEV {}'.format(ref_level)) #Set the reference level
             #--------- Configuring the expected input signal ---------------
@@ -188,11 +188,11 @@ class MyApp(QMainWindow):
             #Select the RRC transmit filter
             fsw.write("SENSe:DDEM:TFIL:NAME 'RRC'")
             fsw.write("SENSe:DDEM:TFIL:ALPH {}".format(alpha))
-            fsw.write("TRIGger:SEQuence:SOURce EXTernal") #Переключаем тригер на EXT1
+            fsw.write("TRIGger:SEQuence:SOURce EXTernal") #Choose external trigger EXT1
             fsw.write("INIT:CONT OFF") #switch to single sweep mode
           #//Initiate a basic frequency sweep and wait until the sweep has finished.
-            fsw.write("DDEMod:RLENgth:VALue {} SYM".format(sym_len)) #захватываемое колличество символов
-            fsw.write('DDEMod:TIME {}'.format(sym_len)) # колличество символов, отобр на экране
+            fsw.write("DDEMod:RLENgth:VALue {} SYM".format(sym_len)) #Captured symbols
+            fsw.write('DDEMod:TIME {}'.format(sym_len)) # Viewed symbols
             fsw.close()
         except:
             self.console_print("No fsw connection!")
@@ -202,7 +202,7 @@ class MyApp(QMainWindow):
 
         try:
             self.gensetup()
-            self.GetSp()
+            self.get_spectrum()
             self.ssweep()
             self.spng()
             self.sdat()
