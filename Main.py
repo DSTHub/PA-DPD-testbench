@@ -1,6 +1,6 @@
 """
 Power amplifiers testbench for DPD
-Just generate, synchronize and demod APKS32 signal 
+Just generate, synchronize and demod APKS32 signal
 Control a FSW16 and a SMW200A by pyvisa + NIvisa
 Save a *png and *dat (raw-data) files
 
@@ -10,8 +10,8 @@ V1.01
 
 """
 
-import sys, time
-import os
+import sys
+import time
 
 import visa
 
@@ -22,6 +22,8 @@ Ui_MainWindow, QtBaseClass = uic.loadUiType("design.ui") # UI file
 
 
 class MyApp(QMainWindow):
+    """Main class of Apps"""
+
     def __init__(self):
         super(MyApp, self).__init__()
         self.ui = Ui_MainWindow()
@@ -32,178 +34,172 @@ class MyApp(QMainWindow):
         self.ui.spng_pushButton.clicked.connect(self.spng)
         self.ui.ssweep_pushButton.clicked.connect(self.ssweep)
         self.ui.alltest_pushButton.clicked.connect(self.alltest)
-        
+
     def console_print(self, text):
+        """Insert text to consol in UI"""
+
         self.ui.plainTextEdit.appendPlainText(text)
-    
-    def savedirgen(self): # Формат файлов и пути для сохранения cf-1e9_srate-10e6_pw10_symLen-32768
-        cf = self.ui.cf_lineEdit.text()
-        sumRate = self.ui.sumRate_lineEdit.text()
+
+    def savedirgen(self):
+        """Prepare file's name in the follow format: cf-1e9_srate-10e6_pw10_symLen-32768"""
+
+        center_frequency = self.ui.cf_lineEdit.text()
+        sum_rate = self.ui.sumRate_lineEdit.text()
         reflvl = self.ui.refLevel_lineEdit.text()
-        symLen = self.ui.symLen_lineEdit.text()
+        sym_len = self.ui.symLen_lineEdit.text()
         pref = self.ui.saveDir_lineEdit.text()
         time_stamp = time.strftime("%Y/%m/%d-%H:%M:%S", time.localtime())
-        save_dir = f"{pref}cf-{(cf)}_srate-{sumRate}_pwr{reflvl}_symlen-{symLen}-{time_stamp}"  # Без расширения файла, только имя
-        return (save_dir)
-        
-    
-    def sdat(self): # Сохранить WAR файл IQ в рабочую папку 
+        save_dir = f"{pref}cf-{(center_frequency)}_srate-{sum_rate}_pwr{reflvl}_symlen-{sym_len}-{time_stamp}"  # Без расширения файла, только имя
+        return save_dir
+
+    def sdat(self):
+        """Save RAW-file with IQ-data into workdir"""
         save_dir = "'{}.dat'".format(self.savedirgen())
-        FSW_addr = self.ui.ipSA_lineEdit.text()     #Адрес анализатора в окне ui 
+        fsw_addr = self.ui.ipSA_lineEdit.text()     #Адрес анализатора в окне ui
         rm = visa.ResourceManager()
         try:
-            FSW = rm.open_resource(FSW_addr)
-            FSW.timeout = 25000
-            FSW.encoding = 'latin_1'
-            FSW.write_termination = None
-            FSW.read_termination = '\n'
-            FSW.write("FORMat:DEXPort:DSEParator POINt")
-            FSW.write("FORMat:DEXPort:HEADer ON")
-            FSW.write("FORMat:DEXPort:MODE RAW")
-            FSW.write("MMEMory:STORe1:TRACe 1, {}".format(save_dir))
+            fsw = rm.open_resource(fsw_addr)
+            fsw.timeout = 25000
+            fsw.encoding = 'latin_1'
+            fsw.write_termination = None
+            fsw.read_termination = '\n'
+            fsw.write("FORMat:DEXPort:DSEParator POINt")
+            fsw.write("FORMat:DEXPort:HEADer ON")
+            fsw.write("FORMat:DEXPort:MODE RAW")
+            fsw.write("MMEMory:STORe1:TRACe 1, {}".format(save_dir))
             self.console_print(f"sdat to {save_dir}")
-            FSW.close()
+            fsw.close()
         except:
             self.console_print("No fsw connection!")
-        
-    def spng(self): # Сохранить скриншот в рабочую папку 
-        
+
+    def spng(self):
+        """Save screenshot into workdir"""
+
         print_dir = "'{}.png'".format(self.savedirgen())
-        FSW_addr = self.ui.ipSA_lineEdit.text()     #Адрес анализатора в окне ui 
+        fsw_addr = self.ui.ipSA_lineEdit.text()     #Адрес анализатора в окне ui
         rm = visa.ResourceManager()
         try:
-            FSW = rm.open_resource(FSW_addr)
-            FSW.timeout = 25000
-            FSW.encoding = 'latin_1'
-            FSW.write_termination = None
-            FSW.read_termination = '\n'
-            FSW.write("HCOP:DEST 'MMEM'") #Prints the data to a file.")
-            FSW.write("HCOP:DEV:LANG PNG") #Selects bmp as the file format.")
-            FSW.write("MMEM:NAME {}".format(print_dir)) #Selects the file name for the printout.
-            FSW.write("HCOP:ITEM:ALL") #Prints all screen elements
-            FSW.write("HCOP:ITEM:WIND:TEXT '0 dBm power off'") #Adds a comment to the printout.
-            FSW.write("HCOP") #//Stores the printout in a file called 'Screenshot.bmp'.
+            fsw = rm.open_resource(fsw_addr)
+            fsw.timeout = 25000
+            fsw.encoding = 'latin_1'
+            fsw.write_termination = None
+            fsw.read_termination = '\n'
+            fsw.write("HCOP:DEST 'MMEM'") #Prints the data to a file.")
+            fsw.write("HCOP:DEV:LANG PNG") #Selects bmp as the file format.")
+            fsw.write("MMEM:NAME {}".format(print_dir)) #Selects the file name for the printout.
+            fsw.write("HCOP:ITEM:ALL") #Prints all screen elements
+            fsw.write("HCOP:ITEM:WIND:TEXT '0 dBm power off'") #Adds a comment to the printout.
+            fsw.write("HCOP") #//Stores the printout in a file called 'Screenshot.bmp'.
             # FSW.write("HCOP:NEXT") #//Stores the printout in a file called 'Screenshot_001.bmp'.
             self.console_print(f"spng to {print_dir}")
-            FSW.close()
+            fsw.close()
         except:
-            self.console_print("No fsw connection!")        
-              
+            self.console_print("No fsw connection!")
+
     def ssweep(self):
-        FSW_addr = self.ui.ipSA_lineEdit.text()     #Адрес анализатора в окне ui 
+        """Make single sweep of analizer, update analizer's data"""
+
+        fsw_addr = self.ui.ipSA_lineEdit.text() #address in ui
         rm = visa.ResourceManager()
         try:
-            FSW = rm.open_resource(FSW_addr)
-            FSW.timeout = 25000
-            FSW.encoding = 'latin_1'
-            FSW.write_termination = None
-            FSW.read_termination = '\n'
-            FSW.write('INIT')                       #сделать однократный запуск
+            fsw = rm.open_resource(fsw_addr)
+            fsw.timeout = 25000
+            fsw.encoding = 'latin_1'
+            fsw.write_termination = None
+            fsw.read_termination = '\n'
+            fsw.write('INIT') #make single sweep
             self.console_print("Done 1-sweep FSW")
-            FSW.close()
+            fsw.close()
         except:
-            self.console_print("No fsw connection!")    
+            self.console_print("No fsw connection!")
 
     def gensetup(self):
-        SMW_addr = self.ui.ipGen_lineEdit.text()
-        cf = self.ui.cf_lineEdit.text()
-        sumRate = self.ui.sumRate_lineEdit.text()
+        """Setup generator with params from UI"""
+
+        smw_addr = self.ui.ipGen_lineEdit.text()
+        center_frequency = self.ui.cf_lineEdit.text()
+        sum_rate = self.ui.sumRate_lineEdit.text()
         reflvl = self.ui.refLevel_lineEdit.text()
         alpha = self.ui.alpha_lineEdit.text()
-        
         rm = visa.ResourceManager()
         try:
-            SMW = rm.open_resource(SMW_addr)
-            SMW.timeout = 25000
-            SMW.encoding = 'latin_1'
-            SMW.write_termination = None
-            SMW.read_termination = '\n'
-            self.console_print("Connected to " + SMW.query('*idn?'))
-
-            SMW.write('*cls')
-            SMW.write('abort')
-            
-            """#################CONFIGURE INSTRUMENT#################"""
-                    
-            SMW.write('SOURce1:BB:DM:FORMat APSK32')
-            SMW.write(':SOURce1:BB:DM:SWITching:STATe 1')
-            SMW.write(':SOURce1:BB:DM:APSK32:GAMMa G9D10')
-            SMW.write(':SOURce1:BB:DM:SWITching:STATe 0')
-            SMW.write(':SOURce1:BB:DM:PRBS:LENGth 20')
-            SMW.write(':SOURce1:BB:DM:FILTer:TYPE RCOS')
-            
-            SMW.write(':SOURce1:BB:DM:FILTer:PARameter:RCOSine {}'.format(alpha))
-            
-            SMW.write(':SOURce1:BB:DM:SRATe {}'.format(sumRate))
-            
-            SMW.write(':SOURce1:BB:DM:TRIGger:OUTPut1:ONTime 8')
-            
-            SMW.write(':SOURce1:BB:DM:TRIGger:OUTPut1:OFFTime 1048567')
-            
-            SMW.write(':SOURce1:FREQuency:CW {}'.format(cf))
-            
-            SMW.write(':SOURce1:POWer:POWer {}'.format(reflvl))
-            
-            SMW.write(':SOURce1:BB:DM:STATe 1')
-            
-            SMW.write(':OUTPut1:STATe 1')
-            SMW.write(':SOURce1:INPut:USER3:DIRection OUTP')
-            SMW.write(':OUTPut1:USER3:SIGNal MARKA1')
-            SMW.close()
+            smw = rm.open_resource(smw_addr)
+            smw.timeout = 25000
+            smw.encoding = 'latin_1'
+            smw.write_termination = None
+            smw.read_termination = '\n'
+            self.console_print("Connected to " + smw.query('*idn?'))
+            smw.write('*cls')
+            smw.write('abort')
+            smw.write('SOURce1:BB:DM:FORMat APSK32')
+            smw.write(':SOURce1:BB:DM:SWITching:STATe 1')
+            smw.write(':SOURce1:BB:DM:APSK32:GAMMa G9D10')
+            smw.write(':SOURce1:BB:DM:SWITching:STATe 0')
+            smw.write(':SOURce1:BB:DM:PRBS:LENGth 20')
+            smw.write(':SOURce1:BB:DM:FILTer:TYPE RCOS')
+            smw.write(':SOURce1:BB:DM:FILTer:PARameter:RCOSine {}'.format(alpha))
+            smw.write(':SOURce1:BB:DM:SRATe {}'.format(sum_rate))
+            smw.write(':SOURce1:BB:DM:TRIGger:OUTPut1:ONTime 8')
+            smw.write(':SOURce1:BB:DM:TRIGger:OUTPut1:OFFTime 1048567')
+            smw.write(':SOURce1:FREQuency:CW {}'.format(center_frequency))
+            smw.write(':SOURce1:POWer:POWer {}'.format(reflvl))
+            smw.write(':SOURce1:BB:DM:STATe 1')
+            smw.write(':OUTPut1:STATe 1')
+            smw.write(':SOURce1:INPut:USER3:DIRection OUTP')
+            smw.write(':OUTPut1:USER3:SIGNal MARKA1')
+            smw.close()
         except:
-            self.console_print("No SMW connection!") 
+            self.console_print("No SMW connection!")
 
     def GetSp(self):
+        """Setup analizer with params from UI"""
+
         print("GetSp!")
-        # Создаем объект и настраиваеи его
-        FSW_adr = self.ui.ipSA_lineEdit.text()
-        cf = self.ui.cf_lineEdit.text()
-        sumRate = self.ui.sumRate_lineEdit.text()
-        refLevel = self.ui.refLevel_lineEdit.text()
+        fsw_adr = self.ui.ipSA_lineEdit.text()
+        center_frequency = self.ui.cf_lineEdit.text()
+        sum_rate = self.ui.sumRate_lineEdit.text()
+        ref_level = self.ui.refLevel_lineEdit.text()
         alpha = self.ui.alpha_lineEdit.text()
-        symLen = self.ui.symLen_lineEdit.text()
-        
+        sym_len = self.ui.symLen_lineEdit.text()
         rm = visa.ResourceManager()
         try:
-            FSW = rm.open_resource(FSW_adr)
-            FSW.timeout = 10000
-            FSW.encoding = 'latin_1'
-            FSW.write_termination = None
-            FSW.read_termination = '\n'
-            self.console_print("Connected to " + FSW.query('*idn?'))
-            
-            FSW.write('*rst')
-            FSW.write('*cls')
-            FSW.write('abort')
-            FSW.write('ROSCillator:SOURce E10') #Внешний опорный сигнал 10 МГц 
+            fsw = rm.open_resource(fsw_adr)
+            fsw.timeout = 10000
+            fsw.encoding = 'latin_1'
+            fsw.write_termination = None
+            fsw.read_termination = '\n'
+            self.console_print("Connected to " + fsw.query('*idn?'))
+            fsw.write('*rst')
+            fsw.write('*cls')
+            fsw.write('abort')
+            fsw.write('ROSCillator:SOURce E10') #Внешний опорный сигнал 10 МГц
             #Create new measurement channel for vector signal analysis named "VSA"
-            FSW.write("INSTrument:CREate DDEM, 'VSA'")
-            FSW.write("INSTrument:SELect 'VSA'") #выбираем канал VSA
-            FSW.write("SYST:PRES:CHAN:EXEC") #Делаем пресет канала VSA
-            FSW.write('FREQ:CENT {}'.format(cf)) #Set the center frequency.
-            FSW.write('DISP:TRAC:Y:RLEV {}'.format(refLevel)) #Set the reference level
+            fsw.write("INSTrument:CREate DDEM, 'VSA'")
+            fsw.write("INSTrument:SELect 'VSA'") #choose channel VSA
+            fsw.write("SYST:PRES:CHAN:EXEC") #Делаем пресет канала VSA
+            fsw.write('FREQ:CENT {}'.format(center_frequency)) #Set the center frequency.
+            fsw.write('DISP:TRAC:Y:RLEV {}'.format(ref_level)) #Set the reference level
             #--------- Configuring the expected input signal ---------------
-            FSW.write("SENSe:DDEMod:FORMat APSK")  #Set the modulation type
-            FSW.write("SENSe:DDEMod:APSK:NSTate 32") #Set the modulation order
+            fsw.write("SENSe:DDEMod:FORMat APSK")  #Set the modulation type
+            fsw.write("SENSe:DDEMod:APSK:NSTate 32") #Set the modulation order
             #FSW.write("SENSe:DDEM:MAPP:CAT?") #Query the available symbol mappings for QPSK modulation
-            FSW.write("SENSe:DDEM:MAPP 'DVB_S2_910'") #Set the symbol mapping
-            FSW.write("SENSe:DDEM:SRAT {}".format(sumRate))  #Set the symbol rate
+            fsw.write("SENSe:DDEM:MAPP 'DVB_S2_910'") #Set the symbol mapping
+            fsw.write("SENSe:DDEM:SRAT {}".format(sum_rate))  #Set the symbol rate
             #Select the RRC transmit filter
-            FSW.write("SENSe:DDEM:TFIL:NAME 'RRC'")
-            FSW.write("SENSe:DDEM:TFIL:ALPH {}".format(alpha))
-        
-        
-            FSW.write("TRIGger:SEQuence:SOURce EXTernal") #Переключаем тригер на EXT1
-        
-            FSW.write("INIT:CONT OFF") #switch to single sweep mode
+            fsw.write("SENSe:DDEM:TFIL:NAME 'RRC'")
+            fsw.write("SENSe:DDEM:TFIL:ALPH {}".format(alpha))
+            fsw.write("TRIGger:SEQuence:SOURce EXTernal") #Переключаем тригер на EXT1
+            fsw.write("INIT:CONT OFF") #switch to single sweep mode
           #//Initiate a basic frequency sweep and wait until the sweep has finished.
-            FSW.write("DDEMod:RLENgth:VALue {} SYM".format(symLen)) #захватываемое колличество символов
-            FSW.write('DDEMod:TIME {}'.format(symLen)) # колличество символов, отобр на экране
-            FSW.close()
+            fsw.write("DDEMod:RLENgth:VALue {} SYM".format(sym_len)) #захватываемое колличество символов
+            fsw.write('DDEMod:TIME {}'.format(sym_len)) # колличество символов, отобр на экране
+            fsw.close()
         except:
-            self.console_print("No fsw connection!") 
-        
+            self.console_print("No fsw connection!")
+
     def alltest(self):
+        """Start all testing procedure one by one"""
+
         try:
             self.gensetup()
             self.GetSp()
@@ -212,11 +208,12 @@ class MyApp(QMainWindow):
             self.sdat()
         except:
             print("not works")
-        
-       
+
+
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MyApp()
-    window.show()
+    APP = QApplication(sys.argv)
+    WINDOW = MyApp()
+    WINDOW.show()
 #    sys.exit(app.exec_()) #does't work in spyder
-    exit(app.exec_())
+    exit(APP.exec_())
+
