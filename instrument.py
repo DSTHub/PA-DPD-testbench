@@ -6,7 +6,7 @@ import visa
 
 
 class Inst():
-    """ Model of R&S FSW spectrum analyzer"""
+    """ Instrument class"""
 
     def __init__(self, addr='ASRL1::INSTR', backend='@sim'):  # debug mode, @sim - read pysiva-sim
         """Initialize instrument attributes, try connect via visa
@@ -31,9 +31,7 @@ class Inst():
         """
 
         try:
-            self.rem = visa.ResourceManager(
-                self.__backend).open_resource(
-                resource_name=self.__addr)  # object res by visa
+            self.rem = visa.ResourceManager(self.__backend).open_resource(resource_name=self.__addr)  # object res by visa
 
         except AttributeError:
             self.__check_connection = False

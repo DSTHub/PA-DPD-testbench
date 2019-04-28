@@ -20,10 +20,12 @@ from PyQt5 import uic
 
 Ui_MainWindow, QtBaseClass = uic.loadUiType("design.ui")  # UI file
 
-visatimeout = 250  # Timeout in msec for each opened resource
+VISATIMEOUT = 250  # Timeout in msec for each opened resource
 
 
 class MyApp(QMainWindow):
+    """Main class of Apps"""
+
     def __init__(self):
         super(MyApp, self).__init__()
         self.ui = Ui_MainWindow()
@@ -44,92 +46,96 @@ class MyApp(QMainWindow):
 
         self.ui_fsw_addr = self.ui.ipSA_lineEdit.text()  # FSW's address from ui
 
-        self.ui.initSa_pushButton.clicked.connect(self.aninit)
-        self.ui.initGen_pushButton.clicked.connect(self.geninit)
-        self.ui.sdat_pushButton.clicked.connect(self.sdat)
-        self.ui.spng_pushButton.clicked.connect(self.spng)
-        self.ui.ssweep_pushButton.clicked.connect(self.ssweep)
-        self.ui.alltest_pushButton.clicked.connect(self.alltest)
-        self.ui.wrParAn_pushButton.clicked.connect(self.wrParAn)
-        self.ui.wrParGen_pushButton.clicked.connect(self.wrParGen)
+        self.ui.initSa_pushButton.clicked.connect(self.an_init)
+        self.ui.initGen_pushButton.clicked.connect(self.gen_init)
+        self.ui.sdat_pushButton.clicked.connect(self.save_data)
+        self.ui.spng_pushButton.clicked.connect(self.save_png)
+        self.ui.ssweep_pushButton.clicked.connect(self.single_sweep)
+        self.ui.alltest_pushButton.clicked.connect(self.all_test)
+        self.ui.wrParAn_pushButton.clicked.connect(self.wr_par_an)
+        self.ui.wrParGen_pushButton.clicked.connect(self.wr_par_gen)
 
-        self.ui.initInst_pushButton.clicked.connect(self.comsenderInit)
-        self.ui.comWr_pushButton.clicked.connect(self.comsenderWr)
-        self.ui.comRead_pushButton.clicked.connect(self.comsenderRead)
-        self.ui.ComQ_pushButton.clicked.connect(self.comsenderQ)
+        self.ui.initInst_pushButton.clicked.connect(self.comsender_init)
+        self.ui.comWr_pushButton.clicked.connect(self.comsender_write)
+        self.ui.comRead_pushButton.clicked.connect(self.comsender_read)
+        self.ui.ComQ_pushButton.clicked.connect(self.comsender_query)
 
 #        self.ui.alpha_lineEdit.editingFinished.connect(self.ssweep)
 #        self.ui.modType_comboBox.activated.connect(self.spng)
 
-    def console_print(self, text):   
+    def console_print(self, text):
         """
         Apend 'text' into ui.plainTextEdit (ui console)
-        
+
         :param text:    text to apend into ui.plainTextEdit (ui console), str
         :return:        None
         """
         self.ui.plainTextEdit.appendPlainText(text)
 
-    # File's name format cf-1e9_srate-10e6_pw10_symLen-32768 + PATH workdir
-    # from ui
     def __savedirgen(self):
-        cf = self.ui.cf_lineEdit.text()
-        sumRate = self.ui.sumRate_lineEdit.text()
-        powerLevel = self.ui.powerLevel_lineEdit.text()
-        symLen = self.ui.symLen_lineEdit.text()
+        """Prepare file's name in format:
+            cf-1e9_srate-10e6_pw10_symLen-32768 + PATH workdir"""
+
+        center_frequency = self.ui.cf_lineEdit.text()
+        sum_rate = self.ui.sumRate_lineEdit.text()
+        power_level = self.ui.powerLevel_lineEdit.text()
+        sym_len = self.ui.symLen_lineEdit.text()
         pref = self.ui.saveDir_lineEdit.text()
         time_stamp = time.strftime("%Y%m%d_%H%M%S", time.localtime())
         # Без расширения файла, только имя
-        save_dir = f"{pref}cf-{(cf)}_srate-{sumRate}_pwr-{powerLevel}_len-{symLen}-{time_stamp}"
-        return (save_dir)
+        save_dir = f"{pref}cf-{(center_frequency)}_srate-{sum_rate}_pwr-{power_level}_len-{sym_len}-{time_stamp}"
+        return save_dir
 
-    def sdat(self):  
+    def save_data(self):
         """
-        Save RAW-file IQ into work dir
+        Save RAW-file IQ into workdir
         """
         save_dir = self.__savedirgen()
         # call Fsw.saveData(), return resp into ui.plainTextEdit
         self.console_print(self.fsw.saveData(save_dir))
 
-    def spng(self):  # Save a screenshot into workdir
+    def save_png(self):
+        """Save a screenshot into workdir"""
+
         print_dir = self.__savedirgen()
         # call Fsw.savePng(), return resp into ui.plainTextEdit
         self.console_print(self.fsw.savePng(print_dir))
 
-    def ssweep(self):
-        # call Fsw.sweep(), return resp into ui.plainTextEdit
+    def single_sweep(self):
+        """call Fsw.sweep(), return resp into ui.plainTextEdit"""
+
         self.console_print(self.fsw.ssweep())
 
-    def geninit(self):
+    def gen_init(self):
         """
         Initialize R&S SMW200A attributes, try connect via visa
 
         """
-        cf = self.ui.cf_lineEdit.text()
-        sumRate = self.ui.sumRate_lineEdit.text()
+        center_frequency = self.ui.cf_lineEdit.text()
+        sum_rate = self.ui.sumRate_lineEdit.text()
         power = self.ui.powerLevel_lineEdit.text()
         alpha = self.ui.alpha_lineEdit.text()
-        SMW_addr = self.ui.ipGen_lineEdit.text()
-        self.smw.addr = SMW_addr
+        smw_addr = self.ui.ipGen_lineEdit.text()
+        self.smw.addr = smw_addr
         self.smw.backend = self.ui.backendComboBox.currentText()
         self.console_print(self.smw.connect())
         self.smw.preconfig()
         if self.smw.check_connection:
             self.console_print(
                 self.smw.initDPDtestBench(
-                    alpha, sumRate, cf, power))
+                    alpha, sum_rate, center_frequency, power))
         else:
             self.console_print('Check SMW200A settings!')
 
-    def aninit(self):
+    def an_init(self):
         """Initialize R&S FSW attributes, try connect via visa
                 self.console_print("Connected to " + FSW.query('*idn?'))
         """
-        cf = self.ui.cf_lineEdit.text()
-        reflvl = self.ui.refLevel_lineEdit.text()
-        sumRate = self.ui.sumRate_lineEdit.text()
+        center_frequency = self.ui.cf_lineEdit.text()
+        ref_lvl = self.ui.refLevel_lineEdit.text()
+        sum_rate = self.ui.sumRate_lineEdit.text()
         alpha = self.ui.alpha_lineEdit.text()
-        symLen = self.ui.symLen_lineEdit.text()
+        sym_len = self.ui.symLen_lineEdit.text()
         fsw_addr = self.ui.ipSA_lineEdit.text()  # FSW addr from UI
         self.fsw.addr = fsw_addr
         self.fsw.backend = self.ui.backendComboBox.currentText()
@@ -139,36 +145,38 @@ class MyApp(QMainWindow):
         if self.fsw.check_connection:
             self.console_print(
                 self.fsw.initDPDtestBench(
-                    cf, reflvl, sumRate, alpha, symLen))
+                    center_frequency, ref_lvl, sum_rate, alpha, sym_len))
         else:
             self.console_print('Check FSW settings!')
 
-    def wrParAn(self):
+    def wr_par_an(self):
         """
-        Write parameters from UI to analyzer  
+        Write parameters from UI to analyzer
         """
-        cf = self.ui.cf_lineEdit.text()
-        reflvl = self.ui.refLevel_lineEdit.text()
-        sumRate = self.ui.sumRate_lineEdit.text()
+        center_frequency = self.ui.cf_lineEdit.text()
+        ref_lvl = self.ui.refLevel_lineEdit.text()
+        sum_rate = self.ui.sumRate_lineEdit.text()
         alpha = self.ui.alpha_lineEdit.text()
-        symLen = self.ui.symLen_lineEdit.text()
+        sym_len = self.ui.symLen_lineEdit.text()
         self.console_print(
             self.fsw.initDPDtestBench(
-                cf, reflvl, sumRate, alpha, symLen))
+                center_frequency, ref_lvl, sum_rate, alpha, sym_len))
 
-    def wrParGen(self):
+    def wr_par_gen(self):
         """
-        Write parameters from UI to signal generator  
+        Write parameters from UI to signal generator
         """
-        cf = self.ui.cf_lineEdit.text()
-        sumRate = self.ui.sumRate_lineEdit.text()
+        center_frequency = self.ui.cf_lineEdit.text()
+        sum_rate = self.ui.sumRate_lineEdit.text()
         power = self.ui.powerLevel_lineEdit.text()
         alpha = self.ui.alpha_lineEdit.text()
         self.console_print(
             self.smw.initDPDtestBench(
-                alpha, sumRate, cf, power))
+                alpha, sum_rate, center_frequency, power))
 
-    def alltest(self):
+    def all_test(self):
+        """Start all testing procedure one by one"""
+
         #        try:
         self.wrParGen()
         self.wrParAn()
@@ -178,7 +186,7 @@ class MyApp(QMainWindow):
 #        except:
 #            print("not works")
 
-    def comsenderInit(self):
+    def comsender_init(self):
         """
         Init comsender
         """
@@ -188,23 +196,21 @@ class MyApp(QMainWindow):
         self.console_print(self.comsender.connect())
         self.fsw.preconfig()
 
-    def comsenderWr(self):
-        """
-        Write command from UI to visa instrument  
-        """
+    def comsender_write(self):
+        """Write command from UI to visa instrument"""
+
         self.console_print(
             self.comsender.write(
                 self.ui.command_lineEdit.text()))
 
-    def comsenderRead(self):
-        """
-        Read data from visa instrument  
-        """
+    def comsender_read(self):
+        """Read data from visa instrument"""
+
         self.console_print(self.comsender.read())
 
-    def comsenderQ(self):
+    def comsender_query(self):
         """
-        Write command from UI to visa instrument then 
+        Write command from UI to visa instrument then
         Read data from visa instrument
         """
         self.console_print(
@@ -214,10 +220,10 @@ class MyApp(QMainWindow):
 
 if __name__ == "__main__":
     if not QApplication.instance():
-        app = QApplication(sys.argv)
+        APP = QApplication(sys.argv)
     else:
-        app = QApplication.instance() 
-    window = MyApp()
-    window.show()
-    app.exec_()
+        APP = QApplication.instance()
+    WINDOW = MyApp()
+    WINDOW.show()
+    APP.exec_()
 
