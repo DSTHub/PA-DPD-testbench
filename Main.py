@@ -22,8 +22,8 @@ Ui_MainWindow, QtBaseClass = uic.loadUiType("design.ui") # UI file
 
 
 class MyApp(QMainWindow):
-    """Main class of Apps"""
-
+    """Main class of Apps
+    """
     def __init__(self):
         super(MyApp, self).__init__()
         self.ui = Ui_MainWindow()
@@ -36,13 +36,14 @@ class MyApp(QMainWindow):
         self.ui.alltest_pushButton.clicked.connect(self.alltest)
 
     def console_print(self, text):
-        """Insert text to consol in UI"""
-
+        """Insert text to consol in UI
+        """
         self.ui.plainTextEdit.appendPlainText(text)
 
     def savedirgen(self):
-        """Prepare file's name in the follow format: cf-1e9_srate-10e6_pw10_symLen-32768"""
-
+        """Prepare file's name in the follow format: 
+        cf-1e9_srate-10e6_pw10_symLen-32768
+        """
         center_frequency = self.ui.cf_lineEdit.text()
         sum_rate = self.ui.sumRate_lineEdit.text()
         reflvl = self.ui.refLevel_lineEdit.text()
@@ -53,7 +54,8 @@ class MyApp(QMainWindow):
         return save_dir
 
     def sdat(self):
-        """Save RAW-file with IQ-data into workdir"""
+        """Save RAW-file with IQ-data into workdir
+        """
         save_dir = "'{}.dat'".format(self.savedirgen())
         fsw_addr = self.ui.ipSA_lineEdit.text()     #Analizer's adress from ui
         rm = visa.ResourceManager()
@@ -69,8 +71,10 @@ class MyApp(QMainWindow):
             fsw.write("MMEMory:STORe1:TRACe 1, {}".format(save_dir))
             self.console_print(f"sdat to {save_dir}")
             fsw.close()
-        except:
+        except visa.VisaIOError as e:
             self.console_print("No fsw connection!")
+        except Exception as e:
+            print "Error '{0}' occurred. Arguments {1}.".format(e.message, e.args)
 
     def spng(self):
         """Save screenshot into workdir"""
@@ -93,8 +97,11 @@ class MyApp(QMainWindow):
             # FSW.write("HCOP:NEXT") #//Stores the printout in a file called 'Screenshot_001.bmp'.
             self.console_print(f"spng to {print_dir}")
             fsw.close()
-        except:
+        except visa.VisaIOError as e:
             self.console_print("No fsw connection!")
+        except Exception as e:
+            print "Error '{0}' occurred. Arguments {1}.".format(e.message, e.args)
+
 
     def ssweep(self):
         """Make single sweep of analizer, update analizer's data"""
@@ -110,8 +117,10 @@ class MyApp(QMainWindow):
             fsw.write('INIT') #make single sweep
             self.console_print("Done 1-sweep FSW")
             fsw.close()
-        except:
+        except visa.VisaIOError as e:
             self.console_print("No fsw connection!")
+        except Exception as e:
+            print "Error '{0}' occurred. Arguments {1}.".format(e.message, e.args)
 
     def gensetup(self):
         """Setup generator with params from UI"""
@@ -148,8 +157,11 @@ class MyApp(QMainWindow):
             smw.write(':SOURce1:INPut:USER3:DIRection OUTP')
             smw.write(':OUTPut1:USER3:SIGNal MARKA1')
             smw.close()
-        except:
-            self.console_print("No SMW connection!")
+        except visa.VisaIOError as e:
+            self.console_print("No fsw connection!")
+        except Exception as e:
+            print "Error '{0}' occurred. Arguments {1}.".format(e.message, e.args)
+
 
     def get_spectrum(self):
         """Setup analizer with params from UI"""
@@ -194,8 +206,11 @@ class MyApp(QMainWindow):
             fsw.write("DDEMod:RLENgth:VALue {} SYM".format(sym_len)) #Captured symbols
             fsw.write('DDEMod:TIME {}'.format(sym_len)) # Viewed symbols
             fsw.close()
-        except:
+        except visa.VisaIOError as e:
             self.console_print("No fsw connection!")
+        except Exception as e:
+            print ("Error '{0}' occurred. Arguments {1}.".format(e.message, e.args))
+
 
     def alltest(self):
         """Start all testing procedure one by one"""
@@ -206,8 +221,11 @@ class MyApp(QMainWindow):
             self.ssweep()
             self.spng()
             self.sdat()
-        except:
-            print("not works")
+        except visa.VisaIOError as e:
+            self.console_print("Something wrong!")
+        except Exception as e:
+            print "Error '{0}' occurred. Arguments {1}.".format(e.message, e.args)
+
 
 
 if __name__ == "__main__":
